@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="روزنامه">
+<title>روزنامه</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,Tahoma,sans-serif;background:#f2f2f7;color:#1c1c1e;min-height:100vh;padding-bottom:50px}
+header{background:#1c1c1e;color:#fff;padding:16px;text-align:center}
+header h1{font-size:18px;font-weight:600}
+header p{font-size:11px;opacity:.5;margin-top:3px}
+.tab-bar{display:flex;background:#fff;border-bottom:1px solid #e5e5ea;position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:13px 4px;text-align:center;font-size:13px;cursor:pointer;border:none;background:transparent;color:#8e8e93;font-weight:500;border-bottom:2px solid transparent}
+.tab.active{color:#007aff;border-bottom-color:#007aff}
+.view{display:none;padding:16px}
+.view.active{display:block}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #e5e5ea}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:13px;color:#636366;margin-bottom:6px;font-weight:500}
+select,input[type=number],input[type=date]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #c7c7cc;font-size:15px;background:#f9f9f9;color:#1c1c1e;outline:none;-webkit-appearance:none}
+select:focus,input:focus{border-color:#007aff;background:#fff}
+textarea{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #c7c7cc;font-size:15px;background:#f9f9f9;color:#1c1c1e;resize:none;height:68px;font-family:inherit;outline:none}
+
+/* ── استایل جدید بخش مانیتورینگ ۲۴ ساعته روز ── */
+.day-limit-box{background:#fafafa;border:1px solid #e5e5ea;border-radius:10px;padding:12px;margin-bottom:14px}
+.day-limit-info{display:flex;justify-content:space-between;font-size:12px;color:#636366;margin-bottom:6px;font-weight:600}
+.day-limit-bar-bg{width:100%;height:14px;background:#e5e5ea;border-radius:7px;overflow:hidden;position:relative}
+.day-limit-bar-fill{height:100%;background:#34c759;width:0%;transition:width 0.3s ease}
+.day-limit-bar-pending{height:100%;background:#ffd60a;width:0%;position:absolute;top:0;right:0;transition:all 0.3s ease}
+
+.time-display{text-align:center;font-size:28px;font-weight:700;color:#007aff;padding:10px;background:#f0f7ff;border-radius:10px;margin-bottom:10px;letter-spacing:1px}
+.quick-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.qbtn{padding:7px 10px;border-radius:8px;border:1px solid #c7c7cc;background:#f2f2f7;color:#1c1c1e;font-size:13px;cursor:pointer;font-family:inherit;flex:1;min-width:60px;text-align:center}
+.qbtn:active{background:#007aff;color:#fff;border-color:#007aff}
+.qbtn.min{background:#fff5e6;border-color:#ffcc88;color:#b36200}
+.qbtn.hr{background:#e8f4ff;border-color:#88ccff;color:#0055aa}
+.btn-clear{width:100%;padding:8px;border-radius:8px;border:1px solid #ffaaaa;background:#fff5f5;color:#ff3b30;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px}
+.btn-save{width:100%;padding:15px;background:#007aff;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px;font-family:inherit}
+.btn-save:active{opacity:.85}
+.entry-card{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #e5e5ea}
+.entry-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.entry-cat{font-size:14px;font-weight:600}
+.entry-group{font-size:11px;color:#8e8e93;margin-bottom:3px}
+.delete-btn{background:none;border:none;color:#ff3b30;font-size:12px;cursor:pointer;padding:0 4px}
+.entry-hours{font-size:13px;color:#636366}
+.entry-note{font-size:13px;color:#8e8e93;margin-top:4px;line-height:1.4}
+.section-lbl{font-size:11px;color:#8e8e93;font-weight:600;margin:16px 0 8px 2px}
+.period-bar{display:flex;gap:6px;margin-bottom:14px}
+.pbtn{padding:7px 14px;border-radius:8px;border:1px solid #c7c7cc;background:#f2f2f7;color:#636366;font-size:13px;cursor:pointer;font-family:inherit}
+.pbtn.active{background:#007aff;color:#fff;border-color:#007aff}
+.stat-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.stat-box{flex:1;min-width:70px;background:#fff;border-radius:12px;padding:10px 6px;text-align:center;border:1px solid #e5e5ea}
+.stat-num{font-size:20px;font-weight:700;color:#007aff}
+.stat-lbl{font-size:10px;color:#8e8e93;margin-top:2px}
+.chart-card{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #e5e5ea}
+.chart-title{font-size:13px;color:#636366;margin-bottom:12px;font-weight:500}
+canvas{display:block;width:100%}
+.legend-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#636366}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.pct-bar-wrap{margin-top:16px}
+.pct-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pct-label{font-size:12px;color:#1c1c1e;width:110px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pct-bar-bg{flex:1;background:#f2f2f7;border-radius:6px;height:18px;overflow:hidden}
+.pct-bar-fill{height:100%;border-radius:6px;transition:width .4s}
+.pct-val{font-size:12px;color:#636366;width:45px;text-align:left;flex-shrink:0}
+.empty{text-align:center;padding:50px 20px;color:#8e8e93;font-size:15px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 22px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.group-header{font-size:11px;font-weight:600;color:#8e8e93;margin:16px 0 6px 2px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<header>
+  <h1>📓 دفترچه زمان</h1>
+  <p id="hdr-count"></p>
+</header>
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('write')">✏️ ثبت</button>
+  <button class="tab" onclick="showTab('entries')">📋 لیست</button>
+  <button class="tab" onclick="showTab('chart')">📊 آنالیز</button>
+</div>
+
+<div id="view-write" class="view active">
+  <div class="day-limit-box">
+    <div class="day-limit-info">
+      <span id="day-limit-txt">کل مصرف شده: ۰ ساعت</span>
+      <span id="day-remain-txt">باقی‌مانده: ۲۴ ساعت</span>
+    </div>
+    <div class="day-limit-bar-bg">
+      <div class="day-limit-bar-fill" id="day-bar-fill"></div>
+      <div class="day-limit-bar-pending" id="day-bar-pending"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="form-group">
+      <label>تاریخ</label>
+      <input type="date" id="entry-date" onchange="updateDayLimitCounter()">
+    </div>
+    <div class="form-group">
+      <label>دسته‌بندی</label>
+      <select id="entry-cat">
+        <optgroup label="🎓 یادگیری و مهارت">
+          <option value="زبان آلمانی|یادگیری">🇩🇪 زبان آلمانی</option>
+          <option value="زبان انگلیسی|یادگیری">🇬🇧 زبان انگلیسی</option>
+          <option value="مطالعه کتاب|یادگیری">📖 مطالعه کتاب</option>
+          <option value="رانندگی|یادگیری">🚗 رانندگی</option>
+        </optgroup>
+        <optgroup label="✍️ خلق محتوا">
+          <option value="نوشتن کتاب|محتوا">📚 نوشتن کتاب</option>
+          <option value="پیج اینستاگرام|محتوا">📸 پیج اینستاگرام</option>
+        </optgroup>
+        <optgroup label="💼 شغلی">
+          <option value="درس و دانشگاه|شغلی">🎓 درس و مطالعه دانشگاه</option>
+          <option value="وظایف کاری|شغلی">💼 وظایف کاری</option>
+          <option value="مقاله علمی|شغلی">🔬 مقاله علمی</option>
+          <option value="ارائه تخصصی|شغلی">🎤 ارائه تخصصی</option>
+          <option value="محتوای تدریس|شغلی">📝 محتوای تدریس</option>
+          <option value="ایمیل و لینکدین|شغلی">📧 ایمیل و لینکدین</option>
+        </optgroup>
+        <optgroup label="🚀 اپلای و آینده">
+          <option value="اپلای و دنبال کار|اپلای">🚀 دنبال کار بودن / اپلای</option>
+        </optgroup>
+        <optgroup label="🌱 کارهای مثبت">
+          <option value="جلسه قرآن|مثبت">📖 جلسه قرآن</option>
+          <option value="شبکه نور|مثبت">🌐 شبکه نور</option>
+          <option value="مسابقه شاپری|مثبت">⭐ مسابقه شاپری</option>
+          <option value="خیریه خانوادگی|مثبت">❤️ خیریه خانوادگی</option>
+          <option value="کار خیر مالی|مثبت">💝 کار خیر مالی</option>
+          <option value="عبادت|مثبت">🤲 عبادت</option>
+          <option value="نوشتن مدیوم|مثبت">✍️ نوشتن مدیوم</option>
+        </optgroup>
+        <optgroup label="🤝 اجتماعی">
+          <option value="تفریح با دوستان|اجتماعی">👯 تفریح با دوستان (حضوری)</option>
+          <option value="چت با دوستان|اجتماعی">💬 چت با دوستان</option>
+          <option value="وقت با خانواده|اجتماعی">🏠 وقت با خانواده</option>
+        </optgroup>
+        <optgroup label="🏕️ تفریح">
+          <option value="طبیعت‌گردی|تفریح">🌿 طبیعت‌گردی</option>
+          <option value="عکاسی|تفریح">📷 عکاسی</option>
+          <option value="فیلم و سریال|تفریح">🎬 فیلم و سریال</option>
+          <option value="اینستاگرام‌گردی|تفریح">📱 اینستاگرام‌گردی</option>
+          <option value="خرید تفریحی|تفریح">🛍️ خرید (تفریحی)</option>
+        </optgroup>
+        <optgroup label="💪 سلامتی و ذهن">
+          <option value="ورزش|سلامتی">🏃 ورزش</option>
+          <option value="بهداشت و زیبایی|سلامتی">🪥 بهداشت فردی و زیبایی</option>
+          <option value="بررسی برنامه|سلامتی">🗓️ بررسی برنامه و ددلاین</option>
+        </optgroup>
+        <optgroup label="🏠 زندگی شخصی">
+          <option value="رفت و آمد|زندگی">🚗 رفت و آمد</option>
+          <option value="تمیزکاری|زندگی">🧹 تمیزکاری</option>
+          <option value="آشپزی|زندگی">🍳 آشپزی</option>
+          <option value="خرید ملزومات|زندگی">🛒 خرید ملزومات</option>
+        </optgroup>
+        <optgroup label="😴 خواب و استراحت">
+          <option value="خواب|استراحت">🛌 خواب</option>
+          <option value="استراحت|استراحت">☕ استراحت (چای، غذا، آروم بودن)</option>
+        </optgroup>
+        <optgroup label="🌀 رها بودن">
+          <option value="لش کردن|رها">🛋️ لش کردن</option>
+          <option value="عصیان|رها">⚡ عصیان</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>مدت زمان</label>
+      <div class="time-display" id="time-display">۰:۰۰</div>
+      <div class="quick-btns">
+        <button class="qbtn min" onclick="addTime(15)">۱۵ دق</button>
+        <button class="qbtn min" onclick="addTime(30)">۳۰ دق</button>
+        <button class="qbtn min" onclick="addTime(45)">۴۵ دق</button>
+        <button class="qbtn hr" onclick="addTime(60)">۱ ساعت</button>
+        <button class="qbtn hr" onclick="addTime(90)">۱.۵</button>
+        <button class="qbtn hr" onclick="addTime(120)">۲ ساعت</button>
+        <button class="qbtn hr" onclick="addTime(180)">۳ ساعت</button>
+        <button class="qbtn hr" onclick="addTime(360)">۶ ساعت</button>
+      </div>
+      <button class="btn-clear" onclick="clearTime()">پاک کردن زمان ✕</button>
+    </div>
+
+    <div class="form-group">
+      <label>یادداشت (اختیاری)</label>
+      <textarea id="entry-note" placeholder="جزییات کوتاه..."></textarea>
+    </div>
+    <button class="btn-save" onclick="saveEntry()">ذخیره ✓</button>
+  </div>
+</div>
+
+<div id="view-entries" class="view">
+  <div id="entries-list"></div>
+</div>
+
+<div id="view-chart" class="view">
+  <div class="period-bar">
+    <button class="pbtn active" onclick="setPeriod('week',this)">این هفته</button>
+    <button class="pbtn" onclick="setPeriod('month',this)">این ماه</button>
+    <button class="pbtn" onclick="setPeriod('all',this)">همه</button>
+  </div>
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-num" id="s-days">0</div><div class="stat-lbl">روز</div></div>
+    <div class="stat-box"><div class="stat-num" id="s-hours">0</div><div class="stat-lbl">ساعت کل</div></div>
+    <div class="stat-box"><div class="stat-num" id="s-top">—</div><div class="stat-lbl">بیشترین</div></div>
+    <div class="stat-box"><div class="stat-num" id="s-count">0</div><div class="stat-lbl">فعالیت</div></div>
+  </div>
+  <div id="chart-empty" class="empty" style="display:none">هنوز داده‌ای ثبت نشده!</div>
+  <div class="chart-card" id="pie-card">
+    <div class="chart-title">توزیع زمان بر اساس دسته</div>
+    <canvas id="pie-canvas" height="260"></canvas>
+    <div class="legend-grid" id="legend-box"></div>
+  </div>
+  <div class="chart-card" id="pct-card">
+    <div class="chart-title">درصد هر دسته از کل زمان</div>
+    <div class="pct-bar-wrap" id="pct-bars"></div>
+  </div>
+  <div class="chart-card" id="bar-card">
+    <div class="chart-title">روز به روز</div>
+    <canvas id="bar-canvas"></canvas>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GROUPS={
+  'یادگیری':'#007aff','محتوا':'#ff9f0a','شغلی':'#34c759',
+  'اپلای':'#5856d6','مثبت':'#2ecc71','اجتماعی':'#af52de',
+  'تفریح':'#ff2d55','سلامتی':'#00c7be','زندگی':'#e67e22',
+  'استراحت':'#8e8e93','رها':'#ff3b30'
+};
+const COLORS={
+  'زبان آلمانی':'#007aff','زبان انگلیسی':'#5ac8fa','مطالعه کتاب':'#0a84ff','رانندگی':'#30b0c7',
+  'نوشتن کتاب':'#ff9f0a','پیج اینستاگرام':'#ff6b6b',
+  'درس و دانشگاه':'#34c759','وظایف کاری':'#30d158','مقاله علمی':'#25a244','ارائه تخصصی':'#1a7a33','محتوای تدریس':'#57d68d','ایمیل و لینکدین':'#3a9a5c',
+  'اپلای و دنبال کار':'#5856d6',
+  'جلسه قرآن':'#2ecc71','شبکه نور':'#27ae60','مسابقه شاپری':'#1e8449','خیریه خانوادگی':'#58d68d','کار خیر مالی':'#a9dfbf','عبادت':'#82e0aa','نوشتن مدیوم':'#52be80',
+  'تفریح با دوستان':'#af52de','چت با دوستان':'#bf5af2','وقت با خانواده':'#ff2d55',
+  'طبیعت‌گردی':'#1abc9c','عکاسی':'#16a085','فیلم و سریال':'#e74c3c','اینستاگرام‌گردی':'#ff6b6b','خرید تفریحی':'#e91e8c',
+  'ورزش':'#00c7be','بهداشت و زیبایی':'#5ac8fa','بررسی برنامه':'#ffd60a',
+  'رفت و آمد':'#a2a2d0','تمیزکاری':'#e67e22','آشپزی':'#d4a017','خرید ملزومات':'#f39c12',
+  'خواب':'#8e8e93','استراحت':'#aeaeb2',
+  'لش کردن':'#ff3b30','عصیان':'#c0392b'
+};
+const KEY='rz-v4';
+let period='week';
+let totalMinutes=0;
+
+const getEntries=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}};
+const saveAll=e=>{localStorage.setItem(KEY,JSON.stringify(e));updateHeader();updateDayLimitCounter();};
+
+function addTime(mins){
+  totalMinutes+=mins;
+  updateTimeDisplay();
+}
+function clearTime(){totalMinutes=0;updateTimeDisplay();}
+function updateTimeDisplay(){
+  const h=Math.floor(totalMinutes/60);
+  const m=totalMinutes%60;
+  document.getElementById('time-display').textContent=h+':'+(m<10?'0':'')+m;
+  updateDayLimitCounter();
+}
+
+/* ── تابع جدید برای محاسبه و مانیتورینگ ۲۴ ساعت روز ── */
+function updateDayLimitCounter(){
+  const dateInput=document.getElementById('entry-date').value;
+  if(!dateInput) return;
+  
+  const entries=getEntries();
+  // محاسبه مجموع ساعت‌های ذخیره شده در تاریخ انتخابی
+  const savedHours=entries.filter(e=>e.date===dateInput).reduce((sum,e)=>sum+e.hours,0);
+  const currentPendingHours=totalMinutes/60;
+  const totalCalculated=savedHours+currentPendingHours;
+  
+  const remainingHours=Math.max(0,24-savedHours);
+  
+  // بروزرسانی متون اطلاعاتی بالای صفحه
+  document.getElementById('day-limit-txt').textContent=`ثبت شده: ${savedHours.toFixed(1)} س`;
+  document.getElementById('day-remain-txt').textContent=`باقی‌مانده: ${remainingHours.toFixed(1)} س`;
+  
+  // تنظیم عرض نوارهای گرافیکی مانیتورینگ
+  const savedPct=Math.min(100,(savedHours/24)*100);
+  const pendingPct=Math.min(100-savedPct,(currentPendingHours/24)*100);
+  
+  const fillBar=document.getElementById('day-bar-fill');
+  const pendingBar=document.getElementById('day-bar-pending');
+  
+  fillBar.style.width=savedPct+'%';
+  pendingBar.style.width=pendingPct+'%';
+  // قرار گرفتن بخش پیش‌فرض در ادامه نوار سبز رنگ
+  pendingBar.style.left=savedPct+'%';
+  
+  // اخطار رنگی اگر مجموع از ۲۴ ساعت بیشتر شد
+  if(totalCalculated>24){
+    pendingBar.style.background='#ff3b30';
+  }else{
+    pendingBar.style.background='#ffd60a';
+  }
+}
+
+function saveEntry(){
+  const date=document.getElementById('entry-date').value;
+  if(!date){showToast('تاریخ را وارد کن');return}
+  if(totalMinutes<=0){showToast('زمان را وارد کن');return}
+  
+  // بررسی سقف ۲۴ ساعت پیش از ذخیره نهایی
+  const entries=getEntries();
+  const savedHours=entries.filter(e=>e.date===date).reduce((sum,e)=>sum+e.hours,0);
+  const hoursToAdd=parseFloat((totalMinutes/60).toFixed(2));
+  
+  if(savedHours+hoursToAdd>24.01){
+    showToast('⚠️ مجموع کارهای این روز بیشتر از ۲۴ ساعت می‌شود!');
+    return;
+  }
+  
+  const catRaw=document.getElementById('entry-cat').value;
+  const [cat,group]=catRaw.split('|');
+  const note=document.getElementById('entry-note').value.trim();
+  
+  const e=getEntries();
+  e.push({id:Date.now(),date,cat,group,hours:hoursToAdd,note});
+  saveAll(e);
+  totalMinutes=0;updateTimeDisplay();
+  document.getElementById('entry-note').value='';
+  showToast('ذخیره شد ✓');
+  showTab('entries');
+}
+
+function renderEntries(){
+  const el=document.getElementById('entries-list');
+  const entries=getEntries();
+  if(!entries.length){el.innerHTML='<div class="empty">هنوز چیزی ثبت نشده 📝</div>';return}
+  const g={};
+  [...entries].reverse().forEach(e=>{if(!g[e.date])g[e.date]=[];g[e.date].push(e)});
+  el.innerHTML=Object.entries(g).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,items])=>{
+    const tot=items.reduce((s,e)=>s+e.hours,0);
+    const h=Math.floor(tot);const m=Math.round((tot-h)*60);
+    return`<div class="section-lbl">${date} — ${h}:${m<10?'0':''}${m}</div>`+
+    items.map(e=>{
+      const c=COLORS[e.cat]||'#888';
+      const gh=Math.floor(e.hours);const gm=Math.round((e.hours-gh)*60);
+      return`<div class="entry-card">
+        <div class="entry-group" style="color:${GROUPS[e.group]||'#888'}">${e.group||''}</div>
+        <div class="entry-header">
+          <span class="entry-cat" style="color:${c}">${e.cat}</span>
+          <button class="delete-btn" onclick="delEntry(${e.id})">حذف</button>
+        </div>
+        <div class="entry-hours">⏱ ${gh}:${gm<10?'0':''}${gm}</div>
+        ${e.note?`<div class="entry-note">${e.note}</div>`:''}
+      </div>`;
+    }).join('');
+  }).join('');
+}
+
+function delEntry(id){saveAll(getEntries().filter(e=>e.id!==id));renderEntries();showToast('حذف شد');}
+
+function filterPeriod(entries){
+  if(period==='all')return entries;
+  const c=new Date();
+  period==='week'?c.setDate(c.getDate()-7):c.setDate(c.getDate()-30);
+  return entries.filter(e=>new Date(e.date)>=c);
+}
+
+function renderCharts(){
+  const entries=filterPeriod(getEntries());
+  const empty=document.getElementById('chart-empty');
+  ['pie-card','pct-card','bar-card'].forEach(id=>document.getElementById(id).style.display='none');
+  if(!entries.length){
+    empty.style.display='block';
+    ['s-days','s-hours','s-count'].forEach(id=>document.getElementById(id).textContent='0');
+    document.getElementById('s-top').textContent='—';
+    return;
+  }
+  empty.style.display='none';
+  ['pie-card','pct-card','bar-card'].forEach(id=>document.getElementById(id).style.display='block');
+
+  const catTotals={};const groupTotals={};
+  entries.forEach(e=>{
+    catTotals[e.cat]=(catTotals[e.cat]||0)+e.hours;
+    groupTotals[e.group||'سایر']=(groupTotals[e.group||'سایر']||0)+e.hours;
+  });
+  const days=new Set(entries.map(e=>e.date)).size;
+  const totalH=Object.values(catTotals).reduce((a,b)=>a+b,0);
+  const topG=Object.entries(groupTotals).sort((a,b)=>b[1]-a[1])[0];
+  const SHORT={'یادگیری':'یادگیری','محتوا':'محتوا','شغلی':'شغلی','اپلای':'اپلای','مثبت':'مثبت','اجتماعی':'اجتماعی','تفریح':'تفریح','سلامتی':'سلامتی','زندگی':'زندگی','استراحت':'استراحت','رها':'رها'};
+  document.getElementById('s-days').textContent=days;
+  document.getElementById('s-hours').textContent=totalH.toFixed(1);
+  document.getElementById('s-top').textContent=topG?(SHORT[topG[0]]||topG[0]):'—';
+  document.getElementById('s-count').textContent=entries.length;
+
+  const gLabels=Object.keys(groupTotals);
+  const gVals=gLabels.map(l=>parseFloat(groupTotals[l].toFixed(2)));
+  const gColors=gLabels.map(l=>GROUPS[l]||'#888');
+  document.getElementById('legend-box').innerHTML=gLabels.map((l,i)=>
+    `<span class="legend-item"><span class="legend-dot" style="background:${gColors[i]}"></span>${l} ${gVals[i].toFixed(1)}h</span>`
+  ).join('');
+  requestAnimationFrame(()=>drawPie(document.getElementById('pie-canvas'),gLabels,gVals,gColors));
+
+  const sorted=Object.entries(groupTotals).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('pct-bars').innerHTML=sorted.map(([g,h])=>{
+    const pct=Math.round(h/totalH*100);
+    const col=GROUPS[g]||'#888';
+    return`<div class="pct-row">
+      <div class="pct-label">${g}</div>
+      <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="pct-val">${pct}% · ${h.toFixed(1)}h</div>
+    </div>`;
+  }).join('');
+
+  const dayMap={};
+  entries.forEach(e=>{
+    if(!dayMap[e.date])dayMap[e.date]={};
+    dayMap[e.date][e.group||'سایر']=(dayMap[e.date][e.group||'سایر']||0)+e.hours;
+  });
+  const sortedDays=Object.keys(dayMap).sort().slice(-14);
+  const datasets=gLabels.map(l=>({color:GROUPS[l]||'#888',data:sortedDays.map(d=>parseFloat(((dayMap[d]&&dayMap[d][l])||0).toFixed(2)))})).filter(ds=>ds.data.some(v=>v>0));
+  requestAnimationFrame(()=>drawBar(document.getElementById('bar-canvas'),sortedDays,datasets));
+}
+
+function drawPie(canvas,labels,values,colors){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||300,H=260;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const cx=W/2,cy=H/2,r=Math.min(cx,cy)-20;
+  const total=values.reduce((a,b)=>a+b,0);
+  let angle=-Math.PI/2;
+  values.forEach((v,i)=>{
+    const slice=(v/total)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle,angle+slice);ctx.closePath();
+    ctx.fillStyle=colors[i];ctx.fill();angle+=slice;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,r*.55,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  ctx.fillStyle='#1c1c1e';ctx.font=`bold ${Math.round(r*.2)}px -apple-system,sans-serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(total.toFixed(1)+'h',cx,cy);
+}
+
+function drawBar(canvas,days,datasets){
+  if(!days.length)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||300;
+  const rowH=38,padL=72,padR=16,padT=10,padB=28;
+  const H=days.length*rowH+padT+padB;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const chartW=W-padL-padR;
+  const dayTotals=days.map(d=>datasets.reduce((s,ds)=>s+(ds.data[days.indexOf(d)]||0),0));
+  const maxH=Math.max(...dayTotals,.1);
+  const steps=4;
+  ctx.strokeStyle='#f0f0f0';ctx.lineWidth=.5;
+  for(let i=0;i<=steps;i++){
+    const x=padL+chartW*(i/steps);
+    ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,H-padB);ctx.stroke();
+    ctx.fillStyle='#8e8e93';ctx.font=`10px -apple-system,sans-serif`;ctx.textAlign='center';
+    ctx.fillText((maxH*i/steps).toFixed(1)+'h',x,H-padB+14);
+  }
+  days.forEach((day,di)=>{
+    const y=padT+di*rowH+4;const bH=rowH-8;let x=padL;
+    datasets.forEach(ds=>{
+      const v=ds.data[di]||0;if(v<=0)return;
+      const bW=(v/maxH)*chartW;
+      ctx.fillStyle=ds.color;ctx.fillRect(x,y,bW,bH);x+=bW;
+    });
+    ctx.fillStyle='#636366';ctx.font=`11px -apple-system,sans-serif`;ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.fillText(day.slice(5),padL-4,y+bH/2);
+  });
+}
+
+function setPeriod(p,el){period=p;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderCharts();}
+function showTab(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tab')[{write:0,entries:1,chart:2}[name]].classList.add('active');
+  if(name==='write')updateDayLimitCounter();
+  if(name==='entries')renderEntries();
+  if(name==='chart')renderCharts();
+}
+function updateHeader(){const n=getEntries().length;document.getElementById('hdr-count').textContent=n?n+' فعالیت':''}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+// مقداردهی اولیه
+document.getElementById('entry-date').value=new Date().toISOString().split('T')[0];
+updateHeader();
+updateDayLimitCounter();
+window.addEventListener('resize',()=>{if(document.getElementById('view-chart').classList.contains('active'))renderCharts();});
+</script>
+</body>
+</html>

@@ -6,7 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="روزنامه">
-<link rel="apple-touch-icon" href="icon.jpg?v=2">
 <title>روزنامه</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -25,14 +24,11 @@ label{display:block;font-size:13px;color:#636366;margin-bottom:6px;font-weight:5
 select,input[type=number],input[type=date]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #c7c7cc;font-size:15px;background:#f9f9f9;color:#1c1c1e;outline:none;-webkit-appearance:none}
 select:focus,input:focus{border-color:#007aff;background:#fff}
 textarea{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #c7c7cc;font-size:15px;background:#f9f9f9;color:#1c1c1e;resize:none;height:68px;font-family:inherit;outline:none}
-
-/* ── استایل جدید بخش مانیتورینگ ۲۴ ساعته روز ── */
 .day-limit-box{background:#fafafa;border:1px solid #e5e5ea;border-radius:10px;padding:12px;margin-bottom:14px}
 .day-limit-info{display:flex;justify-content:space-between;font-size:12px;color:#636366;margin-bottom:6px;font-weight:600}
 .day-limit-bar-bg{width:100%;height:14px;background:#e5e5ea;border-radius:7px;overflow:hidden;position:relative}
 .day-limit-bar-fill{height:100%;background:#34c759;width:0%;transition:width 0.3s ease}
 .day-limit-bar-pending{height:100%;background:#ffd60a;width:0%;position:absolute;top:0;right:0;transition:all 0.3s ease}
-
 .time-display{text-align:center;font-size:28px;font-weight:700;color:#007aff;padding:10px;background:#f0f7ff;border-radius:10px;margin-bottom:10px;letter-spacing:1px}
 .quick-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .qbtn{padding:7px 10px;border-radius:8px;border:1px solid #c7c7cc;background:#f2f2f7;color:#1c1c1e;font-size:13px;cursor:pointer;font-family:inherit;flex:1;min-width:60px;text-align:center}
@@ -72,7 +68,6 @@ canvas{display:block;width:100%}
 .empty{text-align:center;padding:50px 20px;color:#8e8e93;font-size:15px}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 22px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-.group-header{font-size:11px;font-weight:600;color:#8e8e93;margin:16px 0 6px 2px;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -153,8 +148,12 @@ canvas{display:block;width:100%}
           <option value="بهداشت و زیبایی|سلامتی">🪥 بهداشت فردی و زیبایی</option>
           <option value="بررسی برنامه|سلامتی">🗓️ بررسی برنامه و ددلاین</option>
         </optgroup>
+        <optgroup label="🧠 ذهن و روان">
+          <option value="درد و دل با ربات|ذهن">🤖 درد و دل با ربات</option>
+        </optgroup>
         <optgroup label="🏠 زندگی شخصی">
           <option value="رفت و آمد|زندگی">🚗 رفت و آمد</option>
+          <option value="سفر|زندگی">✈️ سفر</option>
           <option value="تمیزکاری|زندگی">🧹 تمیزکاری</option>
           <option value="آشپزی|زندگی">🍳 آشپزی</option>
           <option value="خرید ملزومات|زندگی">🛒 خرید ملزومات</option>
@@ -229,25 +228,79 @@ canvas{display:block;width:100%}
 <div class="toast" id="toast"></div>
 
 <script>
+/* ── رنگ‌های گروه‌ها: هر گروه رنگ کاملاً متمایز ── */
 const GROUPS={
-  'یادگیری':'#007aff','محتوا':'#ff9f0a','شغلی':'#34c759',
-  'اپلای':'#5856d6','مثبت':'#2ecc71','اجتماعی':'#af52de',
-  'تفریح':'#ff2d55','سلامتی':'#00c7be','زندگی':'#e67e22',
-  'استراحت':'#8e8e93','رها':'#ff3b30'
+  'یادگیری': '#5856d6',   /* بنفش */
+  'محتوا':   '#ff9f0a',   /* نارنجی */
+  'شغلی':    '#34c759',   /* سبز */
+  'اپلای':   '#007aff',   /* آبی */
+  'مثبت':    '#00c7be',   /* فیروزه‌ای */
+  'اجتماعی': '#ff2d55',   /* صورتی-قرمز */
+  'تفریح':   '#bf5af2',   /* ارغوانی */
+  'سلامتی':  '#30b0c7',   /* آبی-فیروزه */
+  'ذهن':     '#a2845e',   /* قهوه‌ای گرم */
+  'زندگی':   '#e67e22',   /* نارنجی تیره */
+  'استراحت': '#8e8e93',   /* خاکستری */
+  'رها':     '#ff3b30'    /* قرمز */
 };
+
+/* ── رنگ‌های آیتم‌ها: هر آیتم رنگ نزدیک به گروهش ولی کمی متفاوت ── */
 const COLORS={
-  'زبان آلمانی':'#007aff','زبان انگلیسی':'#5ac8fa','مطالعه کتاب':'#0a84ff','رانندگی':'#30b0c7',
-  'نوشتن کتاب':'#ff9f0a','پیج اینستاگرام':'#ff6b6b',
-  'درس و دانشگاه':'#34c759','وظایف کاری':'#30d158','مقاله علمی':'#25a244','ارائه تخصصی':'#1a7a33','محتوای تدریس':'#57d68d','ایمیل و لینکدین':'#3a9a5c',
-  'اپلای و دنبال کار':'#5856d6',
-  'جلسه قرآن':'#2ecc71','شبکه نور':'#27ae60','مسابقه شاپری':'#1e8449','خیریه خانوادگی':'#58d68d','کار خیر مالی':'#a9dfbf','عبادت':'#82e0aa','نوشتن مدیوم':'#52be80',
-  'تفریح با دوستان':'#af52de','چت با دوستان':'#bf5af2','وقت با خانواده':'#ff2d55',
-  'طبیعت‌گردی':'#1abc9c','عکاسی':'#16a085','فیلم و سریال':'#e74c3c','اینستاگرام‌گردی':'#ff6b6b','خرید تفریحی':'#e91e8c',
-  'ورزش':'#00c7be','بهداشت و زیبایی':'#5ac8fa','بررسی برنامه':'#ffd60a',
-  'رفت و آمد':'#a2a2d0','تمیزکاری':'#e67e22','آشپزی':'#d4a017','خرید ملزومات':'#f39c12',
-  'خواب':'#8e8e93','استراحت':'#aeaeb2',
-  'لش کردن':'#ff3b30','عصیان':'#c0392b'
+  /* یادگیری — طیف بنفش */
+  'زبان آلمانی':    '#5856d6',
+  'زبان انگلیسی':   '#7c7bea',
+  'مطالعه کتاب':    '#9d9df0',
+  'رانندگی':        '#3a38b8',
+  /* محتوا — طیف نارنجی-زرد */
+  'نوشتن کتاب':     '#ff9f0a',
+  'پیج اینستاگرام': '#ffb340',
+  /* شغلی — طیف سبز */
+  'درس و دانشگاه':  '#34c759',
+  'وظایف کاری':     '#28a745',
+  'مقاله علمی':     '#1e7e34',
+  'ارائه تخصصی':    '#40d36a',
+  'محتوای تدریس':   '#5ddd7d',
+  'ایمیل و لینکدین':'#2dbe58',
+  /* اپلای — طیف آبی */
+  'اپلای و دنبال کار':'#007aff',
+  /* مثبت — طیف فیروزه‌ای */
+  'جلسه قرآن':      '#00c7be',
+  'شبکه نور':        '#00a8a0',
+  'مسابقه شاپری':   '#00ddd3',
+  'خیریه خانوادگی': '#00b5ad',
+  'کار خیر مالی':   '#33d6ce',
+  'عبادت':          '#008f88',
+  'نوشتن مدیوم':    '#00e5db',
+  /* اجتماعی — طیف صورتی */
+  'تفریح با دوستان':'#ff2d55',
+  'چت با دوستان':   '#ff6b81',
+  'وقت با خانواده': '#d41e3c',
+  /* تفریح — طیف ارغوانی */
+  'طبیعت‌گردی':     '#bf5af2',
+  'عکاسی':          '#9b3fd4',
+  'فیلم و سریال':   '#d17ef5',
+  'اینستاگرام‌گردی':'#a044cc',
+  'خرید تفریحی':    '#cc88f7',
+  /* سلامتی — طیف آبی-فیروزه */
+  'ورزش':           '#30b0c7',
+  'بهداشت و زیبایی':'#5cc8db',
+  'بررسی برنامه':   '#1a8fa3',
+  /* ذهن — قهوه‌ای گرم */
+  'درد و دل با ربات':'#a2845e',
+  /* زندگی — طیف نارنجی تیره */
+  'رفت و آمد':      '#e67e22',
+  'سفر':            '#f39c12',
+  'تمیزکاری':       '#d35400',
+  'آشپزی':          '#f0a500',
+  'خرید ملزومات':   '#c0700f',
+  /* استراحت — خاکستری */
+  'خواب':           '#8e8e93',
+  'استراحت':        '#aeaeb2',
+  /* رها — قرمز */
+  'لش کردن':        '#ff3b30',
+  'عصیان':          '#c0392b'
 };
+
 const KEY='rz-v4';
 let period='week';
 let totalMinutes=0;
@@ -255,10 +308,7 @@ let totalMinutes=0;
 const getEntries=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}};
 const saveAll=e=>{localStorage.setItem(KEY,JSON.stringify(e));updateHeader();updateDayLimitCounter();};
 
-function addTime(mins){
-  totalMinutes+=mins;
-  updateTimeDisplay();
-}
+function addTime(mins){totalMinutes+=mins;updateTimeDisplay();}
 function clearTime(){totalMinutes=0;updateTimeDisplay();}
 function updateTimeDisplay(){
   const h=Math.floor(totalMinutes/60);
@@ -267,62 +317,37 @@ function updateTimeDisplay(){
   updateDayLimitCounter();
 }
 
-/* ── تابع جدید برای محاسبه و مانیتورینگ ۲۴ ساعت روز ── */
 function updateDayLimitCounter(){
   const dateInput=document.getElementById('entry-date').value;
   if(!dateInput) return;
-  
   const entries=getEntries();
-  // محاسبه مجموع ساعت‌های ذخیره شده در تاریخ انتخابی
   const savedHours=entries.filter(e=>e.date===dateInput).reduce((sum,e)=>sum+e.hours,0);
   const currentPendingHours=totalMinutes/60;
   const totalCalculated=savedHours+currentPendingHours;
-  
   const remainingHours=Math.max(0,24-savedHours);
-  
-  // بروزرسانی متون اطلاعاتی بالای صفحه
   document.getElementById('day-limit-txt').textContent=`ثبت شده: ${savedHours.toFixed(1)} س`;
   document.getElementById('day-remain-txt').textContent=`باقی‌مانده: ${remainingHours.toFixed(1)} س`;
-  
-  // تنظیم عرض نوارهای گرافیکی مانیتورینگ
   const savedPct=Math.min(100,(savedHours/24)*100);
   const pendingPct=Math.min(100-savedPct,(currentPendingHours/24)*100);
-  
   const fillBar=document.getElementById('day-bar-fill');
   const pendingBar=document.getElementById('day-bar-pending');
-  
   fillBar.style.width=savedPct+'%';
   pendingBar.style.width=pendingPct+'%';
-  // قرار گرفتن بخش پیش‌فرض در ادامه نوار سبز رنگ
   pendingBar.style.left=savedPct+'%';
-  
-  // اخطار رنگی اگر مجموع از ۲۴ ساعت بیشتر شد
-  if(totalCalculated>24){
-    pendingBar.style.background='#ff3b30';
-  }else{
-    pendingBar.style.background='#ffd60a';
-  }
+  pendingBar.style.background=totalCalculated>24?'#ff3b30':'#ffd60a';
 }
 
 function saveEntry(){
   const date=document.getElementById('entry-date').value;
   if(!date){showToast('تاریخ را وارد کن');return}
   if(totalMinutes<=0){showToast('زمان را وارد کن');return}
-  
-  // بررسی سقف ۲۴ ساعت پیش از ذخیره نهایی
   const entries=getEntries();
   const savedHours=entries.filter(e=>e.date===date).reduce((sum,e)=>sum+e.hours,0);
   const hoursToAdd=parseFloat((totalMinutes/60).toFixed(2));
-  
-  if(savedHours+hoursToAdd>24.01){
-    showToast('⚠️ مجموع کارهای این روز بیشتر از ۲۴ ساعت می‌شود!');
-    return;
-  }
-  
+  if(savedHours+hoursToAdd>24.01){showToast('⚠️ مجموع کارهای این روز بیشتر از ۲۴ ساعت می‌شود!');return;}
   const catRaw=document.getElementById('entry-cat').value;
   const [cat,group]=catRaw.split('|');
   const note=document.getElementById('entry-note').value.trim();
-  
   const e=getEntries();
   e.push({id:Date.now(),date,cat,group,hours:hoursToAdd,note});
   saveAll(e);
@@ -379,7 +404,6 @@ function renderCharts(){
   }
   empty.style.display='none';
   ['pie-card','pct-card','bar-card'].forEach(id=>document.getElementById(id).style.display='block');
-
   const catTotals={};const groupTotals={};
   entries.forEach(e=>{
     catTotals[e.cat]=(catTotals[e.cat]||0)+e.hours;
@@ -388,12 +412,11 @@ function renderCharts(){
   const days=new Set(entries.map(e=>e.date)).size;
   const totalH=Object.values(catTotals).reduce((a,b)=>a+b,0);
   const topG=Object.entries(groupTotals).sort((a,b)=>b[1]-a[1])[0];
-  const SHORT={'یادگیری':'یادگیری','محتوا':'محتوا','شغلی':'شغلی','اپلای':'اپلای','مثبت':'مثبت','اجتماعی':'اجتماعی','تفریح':'تفریح','سلامتی':'سلامتی','زندگی':'زندگی','استراحت':'استراحت','رها':'رها'};
+  const SHORT={'یادگیری':'یادگیری','محتوا':'محتوا','شغلی':'شغلی','اپلای':'اپلای','مثبت':'مثبت','اجتماعی':'اجتماعی','تفریح':'تفریح','سلامتی':'سلامتی','ذهن':'ذهن','زندگی':'زندگی','استراحت':'استراحت','رها':'رها'};
   document.getElementById('s-days').textContent=days;
   document.getElementById('s-hours').textContent=totalH.toFixed(1);
   document.getElementById('s-top').textContent=topG?(SHORT[topG[0]]||topG[0]):'—';
   document.getElementById('s-count').textContent=entries.length;
-
   const gLabels=Object.keys(groupTotals);
   const gVals=gLabels.map(l=>parseFloat(groupTotals[l].toFixed(2)));
   const gColors=gLabels.map(l=>GROUPS[l]||'#888');
@@ -401,7 +424,6 @@ function renderCharts(){
     `<span class="legend-item"><span class="legend-dot" style="background:${gColors[i]}"></span>${l} ${gVals[i].toFixed(1)}h</span>`
   ).join('');
   requestAnimationFrame(()=>drawPie(document.getElementById('pie-canvas'),gLabels,gVals,gColors));
-
   const sorted=Object.entries(groupTotals).sort((a,b)=>b[1]-a[1]);
   document.getElementById('pct-bars').innerHTML=sorted.map(([g,h])=>{
     const pct=Math.round(h/totalH*100);
@@ -412,7 +434,6 @@ function renderCharts(){
       <div class="pct-val">${pct}% · ${h.toFixed(1)}h</div>
     </div>`;
   }).join('');
-
   const dayMap={};
   entries.forEach(e=>{
     if(!dayMap[e.date])dayMap[e.date]={};
@@ -485,10 +506,9 @@ function showTab(name){
   if(name==='entries')renderEntries();
   if(name==='chart')renderCharts();
 }
-function updateHeader(){const n=getEntries().length;document.getElementById('hdr-count').textContent=n?n+' فعالیت':''}
+function updateHeader(){const n=getEntries().length;document.getElementById('hdr-count').textContent=n?n+' فعالیت':'';}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
 
-// مقداردهی اولیه
 document.getElementById('entry-date').value=new Date().toISOString().split('T')[0];
 updateHeader();
 updateDayLimitCounter();
